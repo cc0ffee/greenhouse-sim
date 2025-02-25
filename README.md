@@ -11,3 +11,4 @@ Estimate the internal temperature of a [Chinese Solar Greenhouse](https://www.ap
 - [x] Get temperature from library / data
 - [ ] Graphs/Visuals, possibly from matplotlib
 - [ ] 10 degrees sunrise/sunset
+- [ ] Enable change in mat thickness and Material the mat is made from
