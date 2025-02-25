@@ -1,6 +1,37 @@
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
+import requests
+import json
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+api_key = os.getenv('OPENWEATHERAPI_KEY')
+base_url = "http://api.weatherapi.com/v1/history.json"
+
+
+def fetch_weather(city, start, end):
+    params = {
+        "key": api_key,
+        "q": city,
+        "dt": start,
+        "aqi": "no",
+        "alerts": "no"
+    }
+    response = requests.get(base_url, params=params)
+    data = response.json()
+    return data
+
+def parse_weather_data(data):
+    hourly_data = []
+    for forecast_day in data['forecast']['forecastday']:
+        for hour_data in forecast_day["hour"]:
+            timestamp = datetime.strptime(hour_data["time"], "%Y-%m-%d %H:%M")
+            temp = hour_data["temp_c"]
+            hourly_data.append({"timestamp": timestamp, "temp": temp})
+    return pd.DataFrame(hourly_data)
 
 # Constants
 SOLAR_GAIN = 6300  # W
@@ -19,17 +50,17 @@ def nighttime_temp(T_internal_prev, Q_thermal, Q_loss, thermal_mass):
     T_internal = T_internal_prev + (Q_thermal - Q_loss) / thermal_mass
     return T_internal
 
-def calculate_hourly_temperatures(start_date, end_date, initial_temp, external_temp_func, solar_gain_func):
-    date_range = pd.date_range(start=start_date, end=end_date, freq='h')
+def calculate_hourly_temperatures(weather_data, initial_temp):
     temperatures = []
     T_internal = initial_temp
 
-    for timestamp in date_range:
+    for _, row in weather_data.iterrows():
+        timestamp = row["timestamp"]
+        T_external = row["temp"]
         hour = timestamp.hour
         is_daytime = 6 <= hour < 18  # Assuming daytime is from 6 AM to 6 PM
 
-        T_external = external_temp_func(timestamp)
-        solar_gain = solar_gain_func(timestamp) if is_daytime else 0
+        solar_gain = SOLAR_GAIN * np.sin(np.pi * (hour - 6) / 12) if is_daytime else 0
 
         if is_daytime:
             T_internal = daytime_temp(T_external, solar_gain, THERMAL_MASS, U_DAY, AREA, T_internal)
@@ -38,24 +69,28 @@ def calculate_hourly_temperatures(start_date, end_date, initial_temp, external_t
             Q_loss = U_NIGHT * AREA * (T_internal - T_external)
             T_internal = nighttime_temp(T_internal, Q_thermal, Q_loss, THERMAL_MASS)
 
-        temperatures.append((timestamp, T_internal))
+        temperatures.append((timestamp, T_internal, T_external))
 
-    return pd.DataFrame(temperatures, columns=['Timestamp', 'Internal Temperature (°C)'])
+    return pd.DataFrame(temperatures, columns=['Timestamp', 'Internal Temperature (°C)', 'External Temperature (°C)'])
 
-# sinusoidal variation
-def external_temp_func(timestamp):
-    amplitude = 20
-    mean_temp = 10
-    hour = timestamp.hour
-    return mean_temp + amplitude * np.sin(2 * np.pi * hour / 24)
+def celsius_to_fahrenheit(df):
+    df['Internal Temperature (°F)'] = df['Internal Temperature (°C)'] * 9/5 + 32
+    df['External Temperature (°F)'] = df['External Temperature (°C)'] * 9/5 + 32
+    return df
 
-def solar_gain_func(timestamp):
-    hour = timestamp.hour
-    return SOLAR_GAIN * np.sin(np.pi * (hour - 6) / 12) if 6 <= hour < 18 else 0
+def main():
+    city = str(input("Enter city name: "))
+    start_date = "2024-03-01"
+    end_date = "2024-03-02" 
+    initial_temp = 20
 
-start_date = datetime(2024, 1, 1)
-end_date = datetime(2024, 1, 2)
-initial_temp = 20  # Initial internal temperature in C
+    weather_data = fetch_weather(city, start_date, end_date)
+    weather_df = parse_weather_data(weather_data)
 
-hourly_temps = calculate_hourly_temperatures(start_date, end_date, initial_temp, external_temp_func, solar_gain_func)
-print(hourly_temps)
+    print("Running Sim...")
+    hourly_temps = calculate_hourly_temperatures(weather_df, initial_temp)
+    hourly_temps = celsius_to_fahrenheit(hourly_temps)
+    print(hourly_temps)
+
+if __name__ == "__main__":
+    main()
