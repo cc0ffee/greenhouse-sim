@@ -8,6 +8,6 @@ Estimate the internal temperature of a [Chinese Solar Greenhouse](https://www.ap
 ### To-Do
 - [ ] Fix/Tweak formulas (if necessary)
 - [ ] Make tests against previous group's results
-- [ ] Get temperature from library / data
-- [x] Graphs/Visuals, possibly from matplotlib
+- [x] Get temperature from library / data
+- [ ] Graphs/Visuals, possibly from matplotlib
 - [ ] 10 degrees sunrise/sunset
