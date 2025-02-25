@@ -5,6 +5,7 @@ import requests
 import json
 from dotenv import load_dotenv
 import os
+import matplotlib.pyplot as plt
 
 load_dotenv()
 
@@ -90,7 +91,27 @@ def main():
     print("Running Sim...")
     hourly_temps = calculate_hourly_temperatures(weather_df, initial_temp)
     hourly_temps = celsius_to_fahrenheit(hourly_temps)
-    print(hourly_temps)
+    # print(hourly_temps)
+    # Convert temperatures to Fahrenheit
+    hourly_temps["Internal Temperature (°F)"] = hourly_temps["Internal Temperature (°C)"] * 9 / 5 + 32
+
+    # Plot the results with data points
+    plt.figure(figsize=(10, 5))
+    plt.plot(hourly_temps["Timestamp"], hourly_temps["Internal Temperature (°F)"], label="Internal Temp (°F)",
+             color="r", marker="o")
+
+    plt.xlabel("Time")
+    plt.ylabel("Temperature (°F)")
+    plt.title("Internal Temperature Over Time (°F)")
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.grid()
+
+    # Show the temperature values at each tick
+    for x, y in zip(hourly_temps["Timestamp"], hourly_temps["Internal Temperature (°F)"]):
+        plt.text(x, y, f"{y:.1f}", ha="right", va="bottom", fontsize=8, color="black")
+
+    plt.show()
 
 if __name__ == "__main__":
     main()
