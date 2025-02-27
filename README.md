@@ -1,5 +1,18 @@
 # Solar Greenhouse Simulation
 Estimate the internal temperature of a [Chinese Solar Greenhouse](https://www.appropedia.org/Chinese_Solar_Greenhouse)
+based on weather data (real-time, forecast, historical).
+
+### Overview
+
+#### Goals
+
+#### Parameters and Formulas
+- Solar Gain
+- Heating Power
+- U_Value (Daytime)
+- U_Value (Nighttime)
+- External Daytime Temp
+- Internal Nighttime Temp
 
 ### Run/Build
 1. Install pip package dependencies: `pip install -r ./requirements.txt`
@@ -9,6 +22,8 @@ Estimate the internal temperature of a [Chinese Solar Greenhouse](https://www.ap
 - [ ] Fix/Tweak formulas (if necessary)
 - [ ] Make tests against previous group's results
 - [x] Get temperature from library / data
-- [ ] Graphs/Visuals, possibly from matplotlib
+- [x] Graphs/Visuals, possibly from matplotlib
 - [ ] 10 degrees sunrise/sunset
-- [ ] Enable change in mat thickness and Material the mat is made from
+- [ ] easy-to-use CLI / Website for others to test on
+
+### Acknowledgements
