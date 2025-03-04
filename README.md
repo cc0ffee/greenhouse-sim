@@ -26,6 +26,7 @@ We were given a report from the previous group with formulas of how to calculate
 
 ### To-Do
 - [ ] Fix/Tweak formulas
+- [ ] Be able to change materials / other params
 - [ ] Make tests against previous group's results
 - [x] Get temperature from library / data
 - [x] Graphs/Visuals, possibly from matplotlib
