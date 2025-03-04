@@ -18,7 +18,6 @@ load_dotenv()
 api_key = os.getenv('OPENWEATHERAPI_KEY')
 base_url = "http://api.weatherapi.com/v1/history.json"
 
-
 def fetch_weather(city, start, end):
     params = {
         "key": api_key,
@@ -87,8 +86,8 @@ def celsius_to_fahrenheit(df):
 
 def main():
     city = str(input("Enter city name: "))
-    start_date = "2024-03-01"
-    end_date = "2024-03-02" 
+    start_date = "2024-05-01"
+    end_date = "2024-05-02" 
     initial_temp = 20
 
     weather_data = fetch_weather(city, start_date, end_date)
