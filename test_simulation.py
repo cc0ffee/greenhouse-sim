@@ -1,3 +1,7 @@
+# KEEP THIS FILE HERE FOR NOW
+# We will remove it later once src/ files are
+# properly organized and working
+
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta

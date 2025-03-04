@@ -6,6 +6,12 @@ based on weather data (real-time, forecast, historical).
 
 #### Goals
 
+We were given a report from the previous group with formulas of how to calculate the internal temperatures of a solar greenhouse. What we want to do now is apply it to real-time data and automate the process. The main goals are:
+
+- Use the report's information against real-time data
+- Optimize formulas to provide variable values
+- Get to run simulations for other groups
+
 #### Parameters and Formulas
 - Solar Gain
 - Heating Power
@@ -19,11 +25,12 @@ based on weather data (real-time, forecast, historical).
 2. Run `test_simulation.py`
 
 ### To-Do
-- [ ] Fix/Tweak formulas (if necessary)
+- [ ] Fix/Tweak formulas
 - [ ] Make tests against previous group's results
 - [x] Get temperature from library / data
 - [x] Graphs/Visuals, possibly from matplotlib
 - [ ] 10 degrees sunrise/sunset
 - [ ] easy-to-use CLI / Website for others to test on
+- [ ] organize and document code
 
 ### Acknowledgements
