@@ -12,6 +12,7 @@ import json
 from dotenv import load_dotenv
 import os
 import matplotlib.pyplot as plt
+from consts import *
 
 load_dotenv()
 
@@ -40,12 +41,12 @@ def parse_weather_data(data):
     return pd.DataFrame(hourly_data)
 
 # Constants
-SOLAR_GAIN = 6300  # W
+SOLAR_GAIN = DEFAULT_GHI * GREENHOUSE_AREA * TRANSMISSION_EFFICIENCY  # W
 HEATING_POWER = 11200  # W
 THERMAL_MASS = 193370  # J/K
 U_DAY = 1.82  # W/m^2-K
 U_NIGHT = 1.96  # W/m^2-K
-AREA = 100  # m^2 (assuming area for heat loss calculation)
+AREA = GREENHOUSE_AREA  # m^2 (assuming area for heat loss calculation)
 
 def daytime_temp(T_external, solar_gain, thermal_mass, U_value, area, T_internal_prev):
     heat_loss = U_value * area * (T_external - T_internal_prev)

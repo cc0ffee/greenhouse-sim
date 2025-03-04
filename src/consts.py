@@ -1,7 +1,5 @@
-# These values should be remained UNCHANGED
-# unless necessary. We will also include
-# preset values here i.e. density and heat capacity
-# for materials.
+# These values should be remained UNCHANGED unless necessary.
+# We will also include preset values here i.e. density and heat capacity for materials.
 
 DEFAULT_LOCATION = "Chicago"
 
@@ -25,5 +23,9 @@ STEEL_DENSITY = 7850
 STEEL_HEAT_CAPACITY = 420
 
 # EXPANDED POLYSTYRENE (EPS)
-EPS_DENSITY = 15 # "Standard" density
+EPS_DENSITY = 15 # "standard" density
 EPS_HEAT_CAPACITY = 1300
+
+# CONCRETE
+CONCRETE_DENSITY = 2300 # "normal" concrete
+CONCRETE_HEAT_CAPACITY = 1000
