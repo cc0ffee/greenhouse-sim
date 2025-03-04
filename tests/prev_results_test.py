@@ -6,3 +6,6 @@
 #   it should just be close enough to it.
 
 import pandas as pd
+
+prev_results = pd.read_csv('data/previous_results.csv')
+hourly_temps['Month'] = hourly_temps.groupby('Month')['Internal Temperature (°F)'].mean().reset_index()
