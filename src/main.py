@@ -13,32 +13,12 @@ from dotenv import load_dotenv
 import os
 import matplotlib.pyplot as plt
 from consts import *
+from utils.fetch_weather import fetch_weather
 
 load_dotenv()
 
 api_key = os.getenv('OPENWEATHERAPI_KEY')
 base_url = "http://api.weatherapi.com/v1/history.json"
-
-def fetch_weather(city, start, end):
-    params = {
-        "key": api_key,
-        "q": city,
-        "dt": start,
-        "aqi": "no",
-        "alerts": "no"
-    }
-    response = requests.get(base_url, params=params)
-    data = response.json()
-    return data
-
-def parse_weather_data(data):
-    hourly_data = []
-    for forecast_day in data['forecast']['forecastday']:
-        for hour_data in forecast_day["hour"]:
-            timestamp = datetime.strptime(hour_data["time"], "%Y-%m-%d %H:%M")
-            temp = hour_data["temp_c"]
-            hourly_data.append({"timestamp": timestamp, "temp": temp})
-    return pd.DataFrame(hourly_data)
 
 # Constants
 SOLAR_GAIN = DEFAULT_GHI * GREENHOUSE_AREA * TRANSMISSION_EFFICIENCY  # W
@@ -91,8 +71,8 @@ def main():
     end_date = "2024-05-02" 
     initial_temp = 20
 
-    weather_data = fetch_weather(city, start_date, end_date)
-    weather_df = parse_weather_data(weather_data)
+    weather_df = fetch_weather(city, start_date, end_date)
+    # weather_df = parse_weather_data(weather_data)
 
     print("Running Sim...")
     hourly_temps = calculate_hourly_temperatures(weather_df, initial_temp)
