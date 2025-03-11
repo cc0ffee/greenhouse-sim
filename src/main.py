@@ -7,18 +7,11 @@
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
-import requests
 import json
-from dotenv import load_dotenv
-import os
 import matplotlib.pyplot as plt
 from consts import *
+from formulas import *
 from utils.fetch_weather import fetch_weather
-
-load_dotenv()
-
-api_key = os.getenv('OPENWEATHERAPI_KEY')
-base_url = "http://api.weatherapi.com/v1/history.json"
 
 # Constants
 SOLAR_GAIN = DEFAULT_GHI * GREENHOUSE_AREA * TRANSMISSION_EFFICIENCY  # W
@@ -27,15 +20,6 @@ THERMAL_MASS = 193370  # J/K
 U_DAY = 1.82  # W/m^2-K
 U_NIGHT = 1.96  # W/m^2-K
 AREA = GREENHOUSE_AREA  # m^2 (assuming area for heat loss calculation)
-
-def daytime_temp(T_external, solar_gain, thermal_mass, U_value, area, T_internal_prev):
-    heat_loss = U_value * area * (T_external - T_internal_prev)
-    T_internal = T_external + (solar_gain - heat_loss) / thermal_mass
-    return T_internal
-
-def nighttime_temp(T_internal_prev, Q_thermal, Q_loss, thermal_mass):
-    T_internal = T_internal_prev + (Q_thermal - Q_loss) / thermal_mass
-    return T_internal
 
 def calculate_hourly_temperatures(weather_data, initial_temp):
     temperatures = []
@@ -77,25 +61,29 @@ def main():
     print("Running Sim...")
     hourly_temps = calculate_hourly_temperatures(weather_df, initial_temp)
     hourly_temps = celsius_to_fahrenheit(hourly_temps)
-    # print(hourly_temps)
-    # Convert temperatures to Fahrenheit
-    hourly_temps["Internal Temperature (°F)"] = hourly_temps["Internal Temperature (°C)"] * 9 / 5 + 32
+
+    # Filter the data to include only the timestamps from hour 6 onwards
+    hourly_temps_filtered = hourly_temps[hourly_temps['Timestamp'].dt.hour >= 6]
 
     # Plot the results with data points
     plt.figure(figsize=(10, 5))
-    plt.plot(hourly_temps["Timestamp"], hourly_temps["Internal Temperature (°F)"], label="Internal Temp (°F)",
+    plt.plot(hourly_temps_filtered["Timestamp"], hourly_temps_filtered["Internal Temperature (°F)"], label="Internal Temp (°F)",
              color="r", marker="o")
+    plt.plot(hourly_temps_filtered["Timestamp"], hourly_temps_filtered["External Temperature (°F)"], label="External Temp (°F)",
+             color="b", marker="x")
 
     plt.xlabel("Time")
     plt.ylabel("Temperature (°F)")
-    plt.title("Internal Temperature Over Time (°F)")
+    plt.title("Internal and External Temperature Over Time (°F)")
     plt.legend()
     plt.xticks(rotation=45)
     plt.grid()
 
     # Show the temperature values at each tick
-    for x, y in zip(hourly_temps["Timestamp"], hourly_temps["Internal Temperature (°F)"]):
+    for x, y in zip(hourly_temps_filtered["Timestamp"], hourly_temps_filtered["Internal Temperature (°F)"]):
         plt.text(x, y, f"{y:.1f}", ha="right", va="bottom", fontsize=8, color="black")
+    for x, y in zip(hourly_temps_filtered["Timestamp"], hourly_temps_filtered["External Temperature (°F)"]):
+        plt.text(x, y, f"{y:.1f}", ha="left", va="top", fontsize=8, color="blue")
 
     plt.show()
 

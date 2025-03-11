@@ -8,7 +8,7 @@
 
 # T_ext + ((solar_gain - heat_loss)/total_thermal_mass)
 def daytime_temp(T_external, solar_gain, thermal_mass, U_value, area, T_internal_prev):
-    heat_loss = U_value * area * (T_external - T_internal_prev)
+    heat_loss = U_value * area * (T_internal_prev - T_external)
     T_internal = T_external + (solar_gain - heat_loss) / thermal_mass
     return T_internal
 
