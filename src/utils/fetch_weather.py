@@ -20,15 +20,29 @@ def fetch_weather(city, start, end):
         "alerts": "no"
     }
     response = requests.get(base_url, params=params)
-    print(response)
     data = response.json()
     return parse_weather_data(data)
 
 def parse_weather_data(data):
     hourly_data = []
     for forecast_day in data['forecast']['forecastday']:
+        
+        sunrise_str = forecast_day["astro"]["sunrise"]
+        sunset_str = forecast_day["astro"]["sunset"]
+        sunrise = datetime.strptime(sunrise_str, "%I:%M %p").time()
+        sunset = datetime.strptime(sunset_str, "%I:%M %p").time()
+
         for hour_data in forecast_day["hour"]:
             timestamp = datetime.strptime(hour_data["time"], "%Y-%m-%d %H:%M")
             temp = hour_data["temp_c"]
-            hourly_data.append({"timestamp": timestamp, "temp": temp})
+            
+            current_time = timestamp.time()
+            is_daytime = sunrise <= current_time < sunset
+            
+            hourly_data.append({
+                "timestamp": timestamp,
+                "temp": temp,
+                "is_daytime": is_daytime
+            })
+            
     return pd.DataFrame(hourly_data)
