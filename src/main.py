@@ -14,12 +14,13 @@ from formulas import *
 from utils.fetch_weather import fetch_weather
 
 # Constants
-SOLAR_GAIN = DEFAULT_GHI * GREENHOUSE_AREA * TRANSMISSION_EFFICIENCY  # W
 HEATING_POWER = 11200  # W
 THERMAL_MASS = 193370  # J/K
-U_DAY = 1.82  # W/m^2-K
-U_NIGHT = 1.96  # W/m^2-K
+U_DAY = 1.96 # W/m^2-K
+U_NIGHT = 0.86  # W/m^2-K
 AREA = GREENHOUSE_AREA  # m^2 (assuming area for heat loss calculation)
+
+sunrise_hour = 7
 
 def calculate_hourly_temperatures(weather_data, initial_temp):
     temperatures = []
@@ -29,8 +30,9 @@ def calculate_hourly_temperatures(weather_data, initial_temp):
         timestamp = row["timestamp"]
         T_external = row["temp"]
         hour = timestamp.hour
-        is_daytime = 6 <= hour < 18  # Assuming daytime is from 6 AM to 6 PM
+        is_daytime = row["is_daytime"]
 
+        # add the angle of sun to greenhouse
         solar_gain = SOLAR_GAIN * np.sin(np.pi * (hour - 6) / 12) if is_daytime else 0
 
         if is_daytime:
@@ -51,8 +53,8 @@ def celsius_to_fahrenheit(df):
 
 def main():
     city = str(input("Enter city name: "))
-    start_date = "2024-05-01"
-    end_date = "2024-05-02" 
+    start_date = "2024-03-20"
+    end_date = "2024-03-21"
     initial_temp = 20
 
     weather_df = fetch_weather(city, start_date, end_date)
@@ -63,7 +65,7 @@ def main():
     hourly_temps = celsius_to_fahrenheit(hourly_temps)
 
     # Filter the data to include only the timestamps from hour 6 onwards
-    hourly_temps_filtered = hourly_temps[hourly_temps['Timestamp'].dt.hour >= 6]
+    hourly_temps_filtered = hourly_temps[hourly_temps['Timestamp'].dt.hour >= sunrise_hour]
 
     # Plot the results with data points
     plt.figure(figsize=(10, 5))
