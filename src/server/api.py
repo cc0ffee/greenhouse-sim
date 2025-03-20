@@ -14,9 +14,12 @@ class SimulationInput(BaseModel):
 def root():
     return {"message": "Simulation API is running!"}
 
-@app.post("/simulate")
-def simulate(params: SimulationInput):
-    weather_df = fetch_weather(params.city, params.start_date, params.end_date)
+@app.get("/simulate")
+def simulate(
+    city: str,
+    start_date: str,
+    end_date: str):
+    weather_df = fetch_weather(city, start_date, end_date)
     hourly_temps = calculate_hourly_temperatures(weather_df)
     hourly_temps["Timestamp"] = hourly_temps["Timestamp"].astype(str)
     response_data = hourly_temps.to_dict(orient="records")
