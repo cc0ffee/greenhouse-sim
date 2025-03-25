@@ -14,11 +14,12 @@ from formulas import *
 from utils.fetch_weather import fetch_weather
 
 # Constants
-SOLAR_GAIN = DEFAULT_GHI * GREENHOUSE_AREA * TRANSMISSION_EFFICIENCY  # W
-HEATING_POWER = 11200  # W
+SOLAR_GAIN = SOLAR_RADIATION * GREENHOUSE_AREA * TRANSMISSION_EFFICIENCY  # W
+HEATING_POWER = 0 #11200  # W
 THERMAL_MASS = 193370  # J/K
-U_DAY = 1.82  # W/m^2-K
-U_NIGHT = 1.96  # W/m^2-K
+#U values are estimates, need to re-calculated
+U_DAY = 5.6  # W/m^2-K
+U_NIGHT = 0.01486  # W/m^2-K
 AREA = GREENHOUSE_AREA  # m^2 (assuming area for heat loss calculation)
 
 def calculate_hourly_temperatures(weather_data, initial_temp):
@@ -37,8 +38,8 @@ def calculate_hourly_temperatures(weather_data, initial_temp):
             T_internal = daytime_temp(T_external, solar_gain, THERMAL_MASS, U_DAY, AREA, T_internal)
         else:
             Q_thermal = HEATING_POWER
-            Q_loss = U_NIGHT * AREA * (T_internal - T_external)
-            T_internal = nighttime_temp(T_internal, Q_thermal, Q_loss, THERMAL_MASS)
+            T_internal = nighttime_temp(T_internal, Q_thermal, U_NIGHT, AREA, T_external, THERMAL_MASS)
+
 
         temperatures.append((timestamp, T_internal, T_external))
 
@@ -51,8 +52,8 @@ def celsius_to_fahrenheit(df):
 
 def main():
     city = str(input("Enter city name: "))
-    start_date = "2024-05-01"
-    end_date = "2024-05-02" 
+    start_date = "2025-03-22"
+    end_date = "2025-03-23"
     initial_temp = 20
 
     weather_df = fetch_weather(city, start_date, end_date)

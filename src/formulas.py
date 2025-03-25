@@ -13,9 +13,12 @@ def daytime_temp(T_external, solar_gain, thermal_mass, U_value, area, T_internal
     return T_internal
 
 # t_int(prev_hour_temp) + ((Q_thermal - Q_loss)/total_thermal_mass)
-def nighttime_temp(T_internal_prev, Q_thermal, Q_loss, thermal_mass):
-    T_internal = T_internal_prev + (Q_thermal - Q_loss) / thermal_mass
-    return T_internal
+def nighttime_temp(T_internal_prev, Q_thermal, U_value, area, T_external, thermal_mass, dt=3600):
+    """Approximates nighttime internal temperature using a single-step heat transfer equation."""
+    Q_loss = U_value * area * (T_internal_prev - T_external)  # Heat loss in watts
+    dT = (-Q_loss + Q_thermal) * dt / thermal_mass  # Temperature change over dt seconds
+    return T_internal_prev + dT  # Update temperature
+
 
 # Q = V_thickness * p_density * c_heat_capacity
 def thermal_mass_calculation(V_volume_layer, P_density, C_heat_capacity):
