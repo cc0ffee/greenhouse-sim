@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from src.main import calculate_hourly_temperatures
-from src.utils.fetch_weather import fetch_weather
+from app.main import calculate_hourly_temperatures
+from app.utils.fetch_weather import fetch_weather
 
 app = FastAPI()
 
