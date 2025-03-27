@@ -40,7 +40,9 @@ def calculate_hourly_temperatures(weather_data):
         if is_daytime:
             T_internal = daytime_temp(T_external, solar_gain, THERMAL_MASS, U_DAY, AREA, T_internal)
         else:
-            T_internal = nighttime_temp(T_external, HEATING_POWER, THERMAL_MASS, U_NIGHT, AREA, T_internal)
+            Q_thermal = HEATING_POWER
+            T_internal = nighttime_temp(T_internal, Q_thermal, U_NIGHT, AREA, T_external, THERMAL_MASS)
+
 
         temperatures.append((timestamp, T_internal, T_external))
 
@@ -53,8 +55,9 @@ def celsius_to_fahrenheit(df):
 
 def main():
     city = str(input("Enter city name: "))
-    start_date = "2024-05-01"
-    end_date = "2024-05-02" 
+    start_date = "2025-03-22"
+    end_date = "2025-03-23"
+    initial_temp = 20
 
     weather_df = fetch_weather(city, start_date, end_date)
     # weather_df = parse_weather_data(weather_data)
