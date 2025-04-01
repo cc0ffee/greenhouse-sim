@@ -53,7 +53,7 @@ def celsius_to_fahrenheit(df):
 
 def main():
     city = str(input("Enter city name: "))
-    start_date = "2025-03-31"
+    start_date = "2025-03-30"
     end_date = "2025-04-1"
     initial_temp = 20
 
@@ -96,6 +96,8 @@ def main():
 
     plt.show()
 
+# create a graph of minimum nighttime temperature between the solstices of the greenhouse
+# X axis day, Y axis minimum nighttime temperature September 21 - March 21 per night
 
 if __name__ == "__main__":
     main()
