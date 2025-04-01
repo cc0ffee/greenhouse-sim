@@ -18,8 +18,8 @@ def nighttime_temp(T_internal_prev, Q_thermal, U_value, area, T_external, therma
     return T_internal_prev + dT  # Update temperature
 
 
-def solar_gain_func(solar_gain, hour):
-    return solar_gain * np.sin(np.pi * (hour - 6) / 12) # mimics angle of sun
+#def solar_gain_func(solar_gain, hour):
+#    return solar_gain * np.sin(np.pi * (hour - 6) / 12) # mimics angle of sun
 
 def thermal_mass_calculation(V_volume_layer, P_density, C_heat_capacity):
     return V_volume_layer * P_density * C_heat_capacity
