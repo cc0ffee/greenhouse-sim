@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from app.main import calculate_hourly_temperatures
 from app.utils.fetch_weather import fetch_weather
-from mangum import Mangum
 
 app = FastAPI()
 
