@@ -34,7 +34,7 @@ const fetchTemperatureData = async (
 ): Promise<TemperatureDataPoint[]> => {
   try {
     // Replace with your actual API URL
-    const apiUrl = `http://${API_BASE_URL}/simulate?city=${encodeURIComponent(city)}&start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`
+    const apiUrl = `https://${API_BASE_URL}/simulate?city=${encodeURIComponent(city)}&start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`
 
     console.log("Fetching data from:", apiUrl)
 
