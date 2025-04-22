@@ -7,6 +7,7 @@ import type React from "react"
 import { useState } from "react"
 import TemperatureGraph from "../components/graphDisplay"
 import RawDataDisplay from "../components/rawDataDisplay"
+import StatsDisplay from "../components/statsDisplay"
 
 // Updated interface to match the actual API response format
 interface TemperatureDataPoint {
@@ -21,7 +22,7 @@ const fetchTemperatureData = async (
   city: string,
   startDate: string,
   endDate: string,
-): Promise<TemperatureDataPoint[]> => {
+): Promise<TemperatureDataPoint []> => {
   try {
     // Replace with your actual API URL
     const apiUrl = `https://${API_BASE_URL}/simulate?city=${encodeURIComponent(city)}&start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`
@@ -91,6 +92,30 @@ export default function TemperatureAnalysisDashboard() {
       return
     }
 
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      setError("Please enter valid dates")
+      return
+    }
+    
+    if (end < start) {
+      setError("End date must be after start date")
+      return
+    }
+
+    // Calculate date difference
+    const diffTime = Math.abs(end.getTime() - start.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    // Optional: Add a warning for large date ranges
+    if (diffDays > 30) {
+      if (!confirm(`You've selected a ${diffDays} day range. This might be slow to load. Continue?`)) {
+        return
+      }
+    }
+
     setIsLoading(true)
 
     try {
@@ -106,14 +131,15 @@ export default function TemperatureAnalysisDashboard() {
     }
   }
 
+
   // Set default dates if not set
   const setDefaultDates = () => {
     if (!startDate) {
       const today = new Date()
-      const yesterday = new Date(today)
-      yesterday.setDate(yesterday.getDate() - 1)
+      const oneWeekAgo = new Date(today)
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7) // Default to 7 days instead of 1
 
-      setStartDate(yesterday.toISOString().split("T")[0])
+      setStartDate(oneWeekAgo.toISOString().split("T")[0])
       setEndDate(today.toISOString().split("T")[0])
     }
   }
@@ -169,6 +195,51 @@ export default function TemperatureAnalysisDashboard() {
               />
             </div>
 
+            <div className="flex flex-col space-y-2">
+              <span className="text-sm text-gray-500">Date Range Presets:</span>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const today = new Date()
+                    const yesterday = new Date(today)
+                    yesterday.setDate(yesterday.getDate() - 1)
+                    setStartDate(yesterday.toISOString().split("T")[0])
+                    setEndDate(today.toISOString().split("T")[0])
+                  }}
+                  className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                >
+                  Last 24h
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const today = new Date()
+                    const weekAgo = new Date(today)
+                    weekAgo.setDate(weekAgo.getDate() - 7)
+                    setStartDate(weekAgo.toISOString().split("T")[0])
+                    setEndDate(today.toISOString().split("T")[0])
+                  }}
+                  className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                >
+                  Last 7 days
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const today = new Date()
+                    const monthAgo = new Date(today)
+                    monthAgo.setDate(monthAgo.getDate() - 30)
+                    setStartDate(monthAgo.toISOString().split("T")[0])
+                    setEndDate(today.toISOString().split("T")[0])
+                  }}
+                  className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                >
+                  Last 30 days
+                </button>
+              </div>
+            </div>
+
             {error && <div className="text-red-500 text-sm p-2 bg-red-50 border border-red-200 rounded">{error}</div>}
 
             <button
@@ -184,6 +255,16 @@ export default function TemperatureAnalysisDashboard() {
 
       {/* RIGHT COLUMN - GRAPH AND RAW DATA */}
       <div className="lg:col-span-2 space-y-4">
+          {/* STATISTICS SECTION */}
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold">STATISTICS</h2>
+          </div>
+          <div className="p-4">
+            <StatsDisplay data={temperatureData} />
+          </div>
+        </div>
+
         {/* GRAPH SECTION */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
           <div className="p-4 border-b border-gray-200">

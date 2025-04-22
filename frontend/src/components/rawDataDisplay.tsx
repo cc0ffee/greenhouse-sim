@@ -17,6 +17,8 @@ interface RawDataDisplayProps {
 
 export default function RawDataDisplay({ data }: RawDataDisplayProps) {
   const [searchTerm, setSearchTerm] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
 
   // Log the data to see what we're working with
   console.log("Raw data component received data:", data)
@@ -41,6 +43,11 @@ export default function RawDataDisplay({ data }: RawDataDisplayProps) {
         item["External Temperature (°C)"].toString().includes(searchTerm))
     )
   })
+
+  // Pagination
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage)
+  const startIndex = (currentPage - 1) * rowsPerPage
+  const paginatedData = filteredData.slice(startIndex, startIndex + rowsPerPage)
 
   // Function to download data as CSV
   const downloadCSV = () => {
@@ -152,7 +159,7 @@ export default function RawDataDisplay({ data }: RawDataDisplayProps) {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredData.map((item, index) => {
+            {paginatedData.map((item, index) => {
               const internalTempF = celsiusToFahrenheit(item["Internal Temperature (°C)"])
               const externalTempF = celsiusToFahrenheit(item["External Temperature (°C)"])
               const isAboveIdeal = internalTempF >= 40
@@ -180,8 +187,62 @@ export default function RawDataDisplay({ data }: RawDataDisplayProps) {
         </table>
       </div>
 
-      <div className="text-sm text-gray-500">
-        Showing {filteredData.length} of {data.length} records
+      {/* Pagination controls */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-gray-500">
+          Showing {startIndex + 1}-{Math.min(startIndex + rowsPerPage, filteredData.length)} of {filteredData.length}{" "}
+          records
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <select
+            value={rowsPerPage}
+            onChange={(e) => {
+              setRowsPerPage(Number(e.target.value))
+              setCurrentPage(1) // Reset to first page when changing rows per page
+            }}
+            className="px-2 py-1 border border-gray-300 rounded text-sm"
+          >
+            <option value={10}>10 rows</option>
+            <option value={25}>25 rows</option>
+            <option value={50}>50 rows</option>
+            <option value={100}>100 rows</option>
+          </select>
+
+          <div className="flex space-x-1">
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className="px-2 py-1 border border-gray-300 rounded text-sm disabled:opacity-50"
+            >
+              First
+            </button>
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-2 py-1 border border-gray-300 rounded text-sm disabled:opacity-50"
+            >
+              Prev
+            </button>
+            <span className="px-2 py-1 text-sm">
+              {currentPage} / {totalPages || 1}
+            </span>
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages || totalPages === 0}
+              className="px-2 py-1 border border-gray-300 rounded text-sm disabled:opacity-50"
+            >
+              Next
+            </button>
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages || totalPages === 0}
+              className="px-2 py-1 border border-gray-300 rounded text-sm disabled:opacity-50"
+            >
+              Last
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )

@@ -16,6 +16,7 @@ def fetch_weather(city, start, end):
         "key": api_key,
         "q": city,
         "dt": start,
+        "end_dt": end,
         "aqi": "no",
         "alerts": "no"
     }
