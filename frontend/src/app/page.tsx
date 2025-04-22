@@ -1,5 +1,7 @@
 "use client"
 
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+
 import type React from "react"
 
 import { useState } from "react"
@@ -32,7 +34,7 @@ const fetchTemperatureData = async (
 ): Promise<TemperatureDataPoint[]> => {
   try {
     // Replace with your actual API URL
-    const apiUrl = `http://localhost:8000/simulate?city=${encodeURIComponent(city)}&start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`
+    const apiUrl = `http://${API_BASE_URL}/simulate?city=${encodeURIComponent(city)}&start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`
 
     console.log("Fetching data from:", apiUrl)
 
