@@ -3,12 +3,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from app.main import calculate_hourly_temperatures
 from app.utils.fetch_weather import fetch_weather
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+api_website = os.getenv('API_WEBSITE')
+
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[api_website],
     allow_credentials=True,
     allow_methods=["*"],  
     allow_headers=["*"],  
