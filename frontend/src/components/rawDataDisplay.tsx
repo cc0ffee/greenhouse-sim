@@ -97,6 +97,11 @@ export default function RawDataDisplay({ data }: RawDataDisplayProps) {
     }
   }
 
+  // Function to convert Celsius to Fahrenheit
+  const celsiusToFahrenheit = (celsius: number): number => {
+    return (celsius * 9) / 5 + 32
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -130,30 +135,47 @@ export default function RawDataDisplay({ data }: RawDataDisplayProps) {
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
-                Internal Temperature (°C)
+                Internal Temperature
               </th>
               <th
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
-                External Temperature (°C)
+                External Temperature
               </th>
-              {/* Add additional columns for any other fields your API returns */}
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Status
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredData.map((item, index) => (
-              <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatTimestamp(item.Timestamp)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {item["Internal Temperature (°C)"]}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {item["External Temperature (°C)"]}
-                </td>
-                {/* Add additional cells for any other fields your API returns */}
-              </tr>
-            ))}
+            {filteredData.map((item, index) => {
+              const internalTempF = celsiusToFahrenheit(item["Internal Temperature (°C)"])
+              const externalTempF = celsiusToFahrenheit(item["External Temperature (°C)"])
+              const isAboveIdeal = internalTempF >= 40
+
+              return (
+                <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatTimestamp(item.Timestamp)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {item["Internal Temperature (°C)"].toFixed(1)}°C / {internalTempF.toFixed(1)}°F
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {item["External Temperature (°C)"].toFixed(1)}°C / {externalTempF.toFixed(1)}°F
+                  </td>
+                  <td
+                    className={`px-6 py-4 whitespace-nowrap text-sm ${isAboveIdeal ? "text-green-600" : "text-red-600"}`}
+                  >
+                    {isAboveIdeal ? "Above 40°F ✓" : "Below 40°F ✗"}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
@@ -164,4 +186,3 @@ export default function RawDataDisplay({ data }: RawDataDisplayProps) {
     </div>
   )
 }
-

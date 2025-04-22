@@ -1,6 +1,16 @@
 "use client"
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  ReferenceLine,
+} from "recharts"
 
 // Updated interface to match the actual API response format
 interface TemperatureDataPoint {
@@ -62,6 +72,9 @@ export default function TemperatureGraph({ data }: TemperatureGraphProps) {
     }
   })
 
+  // Convert 40°F to Celsius: (40 - 32) * 5/9 = 4.44°C
+  const idealTemperatureCelsius = 4.44
+
   return (
     <div className="h-[300px]">
       <ResponsiveContainer width="100%" height="100%">
@@ -96,6 +109,18 @@ export default function TemperatureGraph({ data }: TemperatureGraphProps) {
               return null
             }}
           />
+          {/* Reference line for 40°F (4.44°C) */}
+          <ReferenceLine
+            y={idealTemperatureCelsius}
+            stroke="#16a34a"
+            strokeDasharray="3 3"
+            label={{
+              value: "40°F (4.44°C)",
+              position: "insideBottomRight",
+              fill: "#16a34a",
+              fontSize: 12,
+            }}
+          />
           <Line
             type="monotone"
             dataKey="Internal Temperature (°C)"
@@ -120,4 +145,3 @@ export default function TemperatureGraph({ data }: TemperatureGraphProps) {
     </div>
   )
 }
-

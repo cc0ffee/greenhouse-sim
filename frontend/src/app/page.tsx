@@ -16,16 +16,6 @@ interface TemperatureDataPoint {
   // Add any other fields that your API returns
 }
 
-// Define material types
-const materialTypes = [
-  { id: "concrete", label: "Concrete" },
-  { id: "brick", label: "Brick" },
-  { id: "wood", label: "Wood" },
-  { id: "steel", label: "Steel" },
-  { id: "glass", label: "Glass" },
-  { id: "insulation", label: "Insulation" },
-]
-
 // Function to fetch data from FastAPI with CORS handling
 const fetchTemperatureData = async (
   city: string,
@@ -73,53 +63,13 @@ const fetchTemperatureData = async (
   }
 }
 
-// Mock data for testing when API is not available
-const generateMockData = (city: string, startDate: string, endDate: string): TemperatureDataPoint[] => {
-  const start = new Date(startDate)
-  const end = new Date(endDate)
-  const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
-
-  // Generate 24 data points per day
-  const dataPoints = []
-  for (let day = 0; day < daysDiff + 1; day++) {
-    for (let hour = 0; hour < 24; hour++) {
-      const date = new Date(start)
-      date.setDate(date.getDate() + day)
-      date.setHours(hour)
-
-      // Base temperature with daily and hourly variation
-      const baseTemp = 20 + Math.sin(day * 0.5) * 5 + Math.sin((hour * Math.PI) / 12) * 3
-      const externalTemp = baseTemp - 0.5 - Math.random()
-
-      // Format date as "YYYY-MM-DD HH:MM:SS" to match API format
-      const formattedDate = date.toISOString().replace("T", " ").substring(0, 19)
-
-      dataPoints.push({
-        Timestamp: formattedDate,
-        "Internal Temperature (°C)": Number.parseFloat(baseTemp.toFixed(1)),
-        "External Temperature (°C)": Number.parseFloat(externalTemp.toFixed(1)),
-      })
-    }
-  }
-
-  return dataPoints
-}
-
 export default function TemperatureAnalysisDashboard() {
   const [city, setCity] = useState("")
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
-  const [selectedMaterials, setSelectedMaterials] = useState<string[]>([])
   const [temperatureData, setTemperatureData] = useState<TemperatureDataPoint[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [useMockData, setUseMockData] = useState(false)
-
-  const handleMaterialToggle = (materialId: string) => {
-    setSelectedMaterials((prev) =>
-      prev.includes(materialId) ? prev.filter((id) => id !== materialId) : [...prev, materialId],
-    )
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -144,16 +94,7 @@ export default function TemperatureAnalysisDashboard() {
     setIsLoading(true)
 
     try {
-      let data
-
-      if (useMockData) {
-        // Use mock data for testing
-        data = generateMockData(city, startDate, endDate)
-      } else {
-        // Use real API
-        data = await fetchTemperatureData(city, startDate, endDate)
-      }
-
+      const data = await fetchTemperatureData(city, startDate, endDate);
       console.log("Data received from API:", data)
       setTemperatureData(data)
     } catch (error) {
@@ -226,42 +167,6 @@ export default function TemperatureAnalysisDashboard() {
                 onFocus={setDefaultDates}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
-            </div>
-
-            <div className="space-y-2">
-              <span className="block text-sm font-medium text-gray-700">Material Types (Optional)</span>
-              <div className="grid grid-cols-2 gap-2">
-                {materialTypes.map((material) => (
-                  <div key={material.id} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id={material.id}
-                      checked={selectedMaterials.includes(material.id)}
-                      onChange={() => handleMaterialToggle(material.id)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor={material.id} className="text-sm text-gray-700">
-                      {material.label}
-                    </label>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Note: Material selection is for UI demonstration only and doesn't affect the API results.
-              </p>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="useMockData"
-                checked={useMockData}
-                onChange={() => setUseMockData(!useMockData)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="useMockData" className="text-sm text-gray-700">
-                Use mock data (if API is unavailable)
-              </label>
             </div>
 
             {error && <div className="text-red-500 text-sm p-2 bg-red-50 border border-red-200 rounded">{error}</div>}
