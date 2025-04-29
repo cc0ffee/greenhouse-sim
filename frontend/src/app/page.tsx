@@ -1,6 +1,6 @@
 "use client"
 
-const API_BASE_URL = "localhost:8000"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 import type React from "react"
 
