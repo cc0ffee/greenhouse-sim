@@ -1,6 +1,6 @@
 "use client"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+const API_BASE_URL = "localhost:8000"
 
 import type React from "react"
 
@@ -27,7 +27,7 @@ const fetchTemperatureData = async (
 ): Promise<TemperatureDataPoint []> => {
   try {
     // Replace with your actual API URL
-    const apiUrl = `https://${API_BASE_URL}/simulate?city=${encodeURIComponent(city)}&start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}&heating_power=${heatingPower}&mat_on=${matToggle}`
+    const apiUrl = `http://${API_BASE_URL}/simulate?city=${encodeURIComponent(city)}&start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}&heating_power=${heatingPower}&mat_toggle=${matToggle}`
 
     console.log("Fetching data from:", apiUrl)
 
@@ -67,10 +67,10 @@ const fetchTemperatureData = async (
 }
 
 export default function TemperatureAnalysisDashboard() {
-  const [city, setCity] = useState("New York")
+  const [city, setCity] = useState("")
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
-  const [heatingPower, setHeatingPower] = useState(500) // Default to 500 watts
+  const [heatingPower, setHeatingPower] = useState(0) // Default to 500 watts
   const [matOn, setMatOn] = useState(true) // Default to on
   const [temperatureData, setTemperatureData] = useState<TemperatureDataPoint[]>([])
   const [visibleData, setVisibleData] = useState<TemperatureDataPoint[]>([])
@@ -232,23 +232,24 @@ export default function TemperatureAnalysisDashboard() {
                 Heating Power (Watts)
               </label>
               <input
+                disabled={true}
                 id="heatingPower"
                 type="number"
                 min="0"
-                max="2000"
-                step="50"
+                step="1"
                 value={heatingPower}
                 onChange={(e) => setHeatingPower(Number.parseInt(e.target.value) || 0)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Enter power in watts"
               />
-              <div className="text-xs text-gray-500">Enter a value between 0 and 2000 watts</div>
+              <div className="text-xs text-gray-500">If no heating, set to 0</div>
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center">
                 <input
                   id="matOn"
+                  disabled={true}
                   type="checkbox"
                   checked={matOn}
                   onChange={(e) => setMatOn(e.target.checked)}
