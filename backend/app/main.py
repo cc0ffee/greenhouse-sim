@@ -9,14 +9,14 @@ from app.utils.fetch_weather import fetch_weather
 
 # Constants
 SOLAR_GAIN = SOLAR_RADIATION * GREENHOUSE_AREA * TRANSMISSION_EFFICIENCY  # W
-HEATING_POWER = 0 #200  # W
+# HEATING_POWER = 0 #200  # W
 THERMAL_MASS = 193370  # J/K
 U_DAY = 5.6  # W/m^2-K
 U_NIGHT = 0.01486  # W/m^2-K
 AREA = GREENHOUSE_AREA  # m^2 (assuming area for heat loss calculation)
 
 
-def calculate_hourly_temperatures(weather_data):
+def calculate_hourly_temperatures(weather_data, heating_power, mat_toggle):
     temperatures = []
     T_internal = None
     for _, row in weather_data.iterrows():
@@ -36,8 +36,9 @@ def calculate_hourly_temperatures(weather_data):
         if is_daytime:
             T_internal = daytime_temp(T_external, solar_gain, THERMAL_MASS, U_DAY, AREA, T_internal)
         else:
-            Q_thermal = HEATING_POWER
-            T_internal = nighttime_temp(T_internal, Q_thermal, U_NIGHT, AREA, T_external, THERMAL_MASS)
+            Q_thermal = heating_power
+            U_value_toggle = U_NIGHT if mat_toggle else U_DAY # U_DAY represents without the mat
+            T_internal = nighttime_temp(T_internal, Q_thermal, U_value_toggle, AREA, T_external, THERMAL_MASS)
 
         temperatures.append((timestamp, T_internal, T_external, is_daytime))
 
@@ -45,6 +46,7 @@ def calculate_hourly_temperatures(weather_data):
                         columns=['Timestamp', 'Internal Temperature (°C)', 'External Temperature (°C)', 'Is Daytime'])
 
 
+'''
 def celsius_to_fahrenheit(df):
     df['Internal Temperature (°F)'] = df['Internal Temperature (°C)'] * 9/5 + 32
     df['External Temperature (°F)'] = df['External Temperature (°C)'] * 9/5 + 32
@@ -101,3 +103,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+'''

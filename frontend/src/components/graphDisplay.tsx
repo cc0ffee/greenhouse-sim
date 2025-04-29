@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useRef, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   LineChart,
   Line,
@@ -13,52 +11,38 @@ import {
   ResponsiveContainer,
   Legend,
   ReferenceLine,
-  Brush,
   ReferenceArea,
 } from "recharts"
 import { ZoomIn, ZoomOut, RefreshCw } from "lucide-react"
 
-// Update the interface to include the additional properties we add during data formatting
 interface TemperatureDataPoint {
   Timestamp: string
   "Internal Temperature (°C)": number
   "External Temperature (°C)": number
 }
 
-// Add an interface for the formatted data points with additional properties
 interface FormattedDataPoint extends TemperatureDataPoint {
   formattedTime: string
   sortTime: number
-  timestamp?: Date // Make timestamp optional since it might not exist for invalid dates
+  timestamp?: Date 
   index: number
 }
 
-export default function TemperatureGraph({ data }: { data: TemperatureDataPoint[] }) {
-  // All hooks must be called unconditionally at the top level
+export default function TemperatureGraph({
+  data,
+  onVisibleDataChange,
+}: {
+  data: TemperatureDataPoint[]
+  onVisibleDataChange?: (visibleData: TemperatureDataPoint[]) => void
+}) {
+  // State for zooming and selection
   const [leftIndex, setLeftIndex] = useState<number | null>(null)
   const [rightIndex, setRightIndex] = useState<number | null>(null)
-  const [zoomDomain, setZoomDomain] = useState<{ start: number; end: number } | null>(null)
-  const [isSelecting, setIsSelecting] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
+  const [refAreaLeft, setRefAreaLeft] = useState<string | null>(null)
+  const [refAreaRight, setRefAreaRight] = useState<string | null>(null)
+  const [zoomedData, setZoomedData] = useState<FormattedDataPoint[]>([])
+  const [isZoomed, setIsZoomed] = useState(false)
   const chartRef = useRef<HTMLDivElement>(null)
-
-  // Set mounted state after component mounts
-  useEffect(() => {
-    setIsMounted(true)
-    return () => setIsMounted(false)
-  }, [])
-
-  // Log the data to see what we're working with
-  console.log("Graph component received data:", data)
-
-  // If no data is available, show a placeholder message
-  if (!data.length) {
-    return (
-      <div className="flex items-center justify-center h-[300px] bg-gray-100 rounded-md">
-        <p className="text-gray-500">Enter parameters and click Analyze to see temperature graph</p>
-      </div>
-    )
-  }
 
   // Format and sort timestamps for better display
   const formattedData: FormattedDataPoint[] = data
@@ -105,12 +89,36 @@ export default function TemperatureGraph({ data }: { data: TemperatureDataPoint[
     })
     .sort((a, b) => a.sortTime - b.sortTime) // Sort chronologically
 
+  // Initialize zoomed data with full data
+  useEffect(() => {
+    setZoomedData(formattedData)
+    setIsZoomed(false)
+
+    // Notify parent component about the visible data
+    if (onVisibleDataChange) {
+      onVisibleDataChange(formattedData)
+    }
+  }, [data])
+
+  // Notify parent component when zoomed data changes
+  useEffect(() => {
+    if (onVisibleDataChange) {
+      // Convert FormattedDataPoint back to TemperatureDataPoint for the parent component
+      const visibleData: TemperatureDataPoint[] = zoomedData.map((item) => ({
+        Timestamp: item.Timestamp,
+        "Internal Temperature (°C)": item["Internal Temperature (°C)"],
+        "External Temperature (°C)": item["External Temperature (°C)"],
+      }))
+      onVisibleDataChange(visibleData)
+    }
+  }, [zoomedData])
+
   // Calculate the number of days in the data
   const dayCount = (() => {
-    if (formattedData.length === 0) return 0
+    if (zoomedData.length === 0) return 0
 
     const dates = new Set<string>()
-    formattedData.forEach((item) => {
+    zoomedData.forEach((item) => {
       // Check if timestamp exists and is a valid Date object
       if (item.timestamp && item.timestamp instanceof Date) {
         const dateStr = item.timestamp.toISOString().split("T")[0]
@@ -121,124 +129,96 @@ export default function TemperatureGraph({ data }: { data: TemperatureDataPoint[
     return dates.size
   })()
 
-  console.log(`Data spans ${dayCount} days`)
-
   // Convert 40°F to Celsius: (40 - 32) * 5/9 = 4.44°C
   const idealTemperatureCelsius = 4.44
 
-  // Handle zoom in/out
-  const handleZoom = () => {
-    if (leftIndex !== null && rightIndex !== null) {
-      const left = Math.min(leftIndex, rightIndex)
-      const right = Math.max(leftIndex, rightIndex)
-
-      if (left === right) {
-        setZoomDomain(null)
-      } else {
-        setZoomDomain({ start: left, end: right })
-      }
-
-      setLeftIndex(null)
-      setRightIndex(null)
-    }
+  // Mouse down handler for selection
+  const handleMouseDown = (e: any) => {
+    if (!e || !e.activeLabel) return
+    setRefAreaLeft(e.activeLabel)
   }
 
-  // Handle mouse events for zooming
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!chartRef.current) return
-
-    const chartRect = chartRef.current.getBoundingClientRect()
-    const xPos = e.clientX - chartRect.left
-    const chartWidth = chartRect.width
-
-    // Calculate index based on position
-    const dataLength = formattedData.length
-    const index = Math.floor((xPos / chartWidth) * dataLength)
-
-    if (index >= 0 && index < dataLength) {
-      setLeftIndex(index)
-      setIsSelecting(true)
-    }
+  // Mouse move handler for selection
+  const handleMouseMove = (e: any) => {
+    if (!e || !e.activeLabel || !refAreaLeft) return
+    setRefAreaRight(e.activeLabel)
   }
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isSelecting || !chartRef.current) return
-
-    const chartRect = chartRef.current.getBoundingClientRect()
-    const xPos = e.clientX - chartRect.left
-    const chartWidth = chartRect.width
-
-    // Calculate index based on position
-    const dataLength = formattedData.length
-    const index = Math.floor((xPos / chartWidth) * dataLength)
-
-    if (index >= 0 && index < dataLength) {
-      setRightIndex(index)
-    }
-  }
-
+  // Mouse up handler for selection
   const handleMouseUp = () => {
-    if (isSelecting) {
-      setIsSelecting(false)
-      handleZoom()
+    if (!refAreaLeft || !refAreaRight) {
+      setRefAreaLeft(null)
+      setRefAreaRight(null)
+      return
     }
+
+    // Find indices for the selected area
+    const leftIdx = formattedData.findIndex((item) => item.formattedTime === refAreaLeft)
+    const rightIdx = formattedData.findIndex((item) => item.formattedTime === refAreaRight)
+
+    // Ensure left is before right
+    const startIdx = Math.min(leftIdx, rightIdx)
+    const endIdx = Math.max(leftIdx, rightIdx)
+
+    if (startIdx !== -1 && endIdx !== -1 && startIdx !== endIdx) {
+      setLeftIndex(startIdx)
+      setRightIndex(endIdx)
+      setZoomedData(formattedData.slice(startIdx, endIdx + 1))
+      setIsZoomed(true)
+    }
+
+    setRefAreaLeft(null)
+    setRefAreaRight(null)
+  }
+
+  // Zoom in
+  const zoomIn = () => {
+    if (zoomedData.length <= 10) return // Prevent zooming in too far
+
+    const midPoint = Math.floor(zoomedData.length / 2)
+    const newStartIdx = Math.max(0, midPoint - Math.floor(zoomedData.length / 4))
+    const newEndIdx = Math.min(zoomedData.length - 1, midPoint + Math.floor(zoomedData.length / 4))
+
+    setZoomedData(zoomedData.slice(newStartIdx, newEndIdx + 1))
+    setIsZoomed(true)
+  }
+
+  // Zoom out
+  const zoomOut = () => {
+    if (!isZoomed) return
+
+    if (leftIndex === null || rightIndex === null) {
+      resetZoom()
+      return
+    }
+
+    // Calculate new indices that show more data
+    const currentRange = rightIndex - leftIndex
+    const newLeftIdx = Math.max(0, leftIndex - Math.floor(currentRange / 2))
+    const newRightIdx = Math.min(formattedData.length - 1, rightIndex + Math.floor(currentRange / 2))
+
+    // If we're showing almost all data, just reset
+    if (newRightIdx - newLeftIdx >= formattedData.length * 0.9) {
+      resetZoom()
+      return
+    }
+
+    setLeftIndex(newLeftIdx)
+    setRightIndex(newRightIdx)
+    setZoomedData(formattedData.slice(newLeftIdx, newRightIdx + 1))
   }
 
   // Reset zoom
   const resetZoom = () => {
-    setZoomDomain(null)
+    setZoomedData(formattedData)
     setLeftIndex(null)
     setRightIndex(null)
+    setIsZoomed(false)
   }
 
-  // Zoom in by 25%
-  const zoomIn = () => {
-    if (!zoomDomain && formattedData.length > 0) {
-      // If not zoomed yet, zoom to middle 50%
-      const dataLength = formattedData.length
-      const middle = Math.floor(dataLength / 2)
-      const quarter = Math.floor(dataLength / 4)
-      setZoomDomain({ start: middle - quarter, end: middle + quarter })
-    } else if (zoomDomain) {
-      // Further zoom in by 25% of current view
-      const currentRange = zoomDomain.end - zoomDomain.start
-      const newRange = Math.max(Math.floor(currentRange * 0.75), 2) // Ensure at least 2 points
-      const middle = Math.floor((zoomDomain.start + zoomDomain.end) / 2)
-      const halfNewRange = Math.floor(newRange / 2)
-
-      setZoomDomain({
-        start: Math.max(0, middle - halfNewRange),
-        end: Math.min(formattedData.length - 1, middle + halfNewRange),
-      })
-    }
-  }
-
-  // Zoom out by 25%
-  const zoomOut = () => {
-    if (zoomDomain) {
-      const currentRange = zoomDomain.end - zoomDomain.start
-      const newRange = Math.min(Math.floor(currentRange * 1.25), formattedData.length)
-      const middle = Math.floor((zoomDomain.start + zoomDomain.end) / 2)
-      const halfNewRange = Math.floor(newRange / 2)
-
-      const newStart = Math.max(0, middle - halfNewRange)
-      const newEnd = Math.min(formattedData.length - 1, middle + halfNewRange)
-
-      // If we're showing almost everything, just reset zoom
-      if (newEnd - newStart > formattedData.length * 0.9) {
-        resetZoom()
-      } else {
-        setZoomDomain({ start: newStart, end: newEnd })
-      }
-    }
-  }
-
-  // Get the data to display based on zoom level
-  const displayData = zoomDomain ? formattedData.slice(zoomDomain.start, zoomDomain.end + 1) : formattedData
-
-  // Determine tick interval based on data size and zoom level
+  // Determine tick interval based on data size
   const getTickInterval = () => {
-    const dataLength = displayData.length
+    const dataLength = zoomedData.length
 
     if (dataLength <= 24) return 1 // Show every point for small datasets
     if (dataLength <= 48) return 2 // Every 2 hours for 2 days
@@ -246,11 +226,14 @@ export default function TemperatureGraph({ data }: { data: TemperatureDataPoint[
     return 12 // Every 12 hours for larger datasets
   }
 
-  // Add a unique index to each data point for use with ReferenceArea
-  const indexedDisplayData = displayData.map((item, index) => ({
-    ...item,
-    displayIndex: index, // Add a unique index for display purposes
-  }))
+  // If no data is available, show a placeholder message
+  if (!data.length) {
+    return (
+      <div className="flex items-center justify-center h-[300px] bg-gray-100 rounded-md">
+        <p className="text-gray-500">Enter parameters and click Analyze to see temperature graph</p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-2">
@@ -259,35 +242,46 @@ export default function TemperatureGraph({ data }: { data: TemperatureDataPoint[
           {dayCount > 0 ? `Displaying data for ${dayCount} day${dayCount > 1 ? "s" : ""}` : "No date information"}
         </div>
         <div className="flex space-x-2">
-          <button onClick={zoomIn} className="p-1 rounded bg-gray-100 hover:bg-gray-200" title="Zoom In">
-            <ZoomIn size={16} />
+          <button
+            onClick={zoomIn}
+            className="p-1 rounded bg-gray-100 hover:bg-gray-200"
+            title="Zoom In"
+            disabled={zoomedData.length <= 10}
+          >
+            <ZoomIn size={16} className={zoomedData.length <= 10 ? "text-gray-400" : ""} />
           </button>
-          <button onClick={zoomOut} className="p-1 rounded bg-gray-100 hover:bg-gray-200" title="Zoom Out">
-            <ZoomOut size={16} />
+          <button
+            onClick={zoomOut}
+            className="p-1 rounded bg-gray-100 hover:bg-gray-200"
+            title="Zoom Out"
+            disabled={!isZoomed}
+          >
+            <ZoomOut size={16} className={!isZoomed ? "text-gray-400" : ""} />
           </button>
-          <button onClick={resetZoom} className="p-1 rounded bg-gray-100 hover:bg-gray-200" title="Reset Zoom">
-            <RefreshCw size={16} />
+          <button
+            onClick={resetZoom}
+            className="p-1 rounded bg-gray-100 hover:bg-gray-200"
+            title="Reset Zoom"
+            disabled={!isZoomed}
+          >
+            <RefreshCw size={16} className={!isZoomed ? "text-gray-400" : ""} />
           </button>
         </div>
       </div>
 
-      <div
-        className="h-[300px]"
-        ref={chartRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-      >
+      <div className="h-[300px]" ref={chartRef}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
-            data={indexedDisplayData}
+            data={zoomedData}
             margin={{
               top: 5,
               right: 30,
               left: 20,
               bottom: 5,
             }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
           >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
@@ -331,12 +325,16 @@ export default function TemperatureGraph({ data }: { data: TemperatureDataPoint[
                 fontSize: 12,
               }}
             />
+            {/* Reference area for selection */}
+            {refAreaLeft && refAreaRight && (
+              <ReferenceArea x1={refAreaLeft} x2={refAreaRight} strokeOpacity={0.3} fill="#8884d8" fillOpacity={0.3} />
+            )}
             <Line
               type="monotone"
               dataKey="Internal Temperature (°C)"
               stroke="#3b82f6"
               strokeWidth={2}
-              dot={displayData.length < 50} // Only show dots when zoomed in enough
+              dot={zoomedData.length < 50} // Only show dots when zoomed in enough
               activeDot={{ r: 6, strokeWidth: 0 }}
               name="Internal"
             />
@@ -345,53 +343,25 @@ export default function TemperatureGraph({ data }: { data: TemperatureDataPoint[
               dataKey="External Temperature (°C)"
               stroke="#ef4444"
               strokeWidth={2}
-              dot={displayData.length < 50} // Only show dots when zoomed in enough
+              dot={zoomedData.length < 50} // Only show dots when zoomed in enough
               activeDot={{ r: 6, strokeWidth: 0 }}
               name="External"
             />
             <Legend />
-
-            {/* Selection area for zooming - use displayIndex instead of formattedTime */}
-            {leftIndex !== null && rightIndex !== null && (
-              <ReferenceArea x1={leftIndex} x2={rightIndex} strokeOpacity={0.3} fill="#8884d8" fillOpacity={0.3} />
-            )}
-
-            {/* Only render Brush when component is fully mounted */}
-            {isMounted && formattedData.length > 24 && (
-              <Brush
-                dataKey="displayIndex" // Use numeric index instead of string
-                height={30}
-                stroke="#8884d8"
-                startIndex={0}
-                endIndex={formattedData.length - 1}
-                onChange={(brushState) => {
-                  if (
-                    typeof brushState.startIndex === "number" &&
-                    typeof brushState.endIndex === "number" &&
-                    brushState.startIndex !== brushState.endIndex
-                  ) {
-                    setZoomDomain({
-                      start: brushState.startIndex,
-                      end: brushState.endIndex,
-                    })
-                  }
-                }}
-              />
-            )}
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       <div className="text-xs text-gray-500 text-center">
-        {zoomDomain ? (
+        {isZoomed ? (
           <span>
-            Showing {displayData.length} of {formattedData.length} data points.
+            Showing {zoomedData.length} of {formattedData.length} data points.
             <button onClick={resetZoom} className="text-blue-500 hover:underline ml-1">
               Reset zoom
             </button>
           </span>
         ) : (
-          <span>Tip: Click and drag on the chart to zoom into a specific area</span>
+          <span>Tip: Drag on the chart to select a range to zoom in</span>
         )}
       </div>
     </div>

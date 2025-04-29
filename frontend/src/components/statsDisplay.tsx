@@ -18,13 +18,11 @@ interface Statistics {
     min: number
     max: number
     avg: number
-    current: number
   }
   external: {
     min: number
     max: number
     avg: number
-    current: number
   }
   dayCount: number
 }
@@ -38,11 +36,6 @@ export default function TemperatureStatistics({ data }: TemperatureStatisticsPro
       setStats(null)
       return
     }
-
-    // Sort data by timestamp to get the most recent reading
-    const sortedData = [...data].sort((a, b) => {
-      return new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime()
-    })
 
     // Calculate statistics
     const internalTemps = data.map((item) => item["Internal Temperature (°C)"])
@@ -61,13 +54,11 @@ export default function TemperatureStatistics({ data }: TemperatureStatisticsPro
         min: Math.min(...internalTemps),
         max: Math.max(...internalTemps),
         avg: internalTemps.reduce((sum, temp) => sum + temp, 0) / internalTemps.length,
-        current: sortedData[0]["Internal Temperature (°C)"],
       },
       external: {
         min: Math.min(...externalTemps),
         max: Math.max(...externalTemps),
         avg: externalTemps.reduce((sum, temp) => sum + temp, 0) / externalTemps.length,
-        current: sortedData[0]["External Temperature (°C)"],
       },
       dayCount: uniqueDays.size,
     })
@@ -95,43 +86,42 @@ export default function TemperatureStatistics({ data }: TemperatureStatisticsPro
           <Thermometer className="h-5 w-5 text-blue-500" />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-blue-50 rounded p-2">
-            <div className="text-xs text-blue-600 uppercase font-semibold">Current</div>
-            <div className="text-xl font-bold text-blue-800">
-              {stats.internal.current.toFixed(1)}°C
-              <span className="text-sm font-normal text-blue-600 ml-1">
-                ({celsiusToFahrenheit(stats.internal.current).toFixed(1)}°F)
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-blue-50 rounded p-2">
-            <div className="text-xs text-blue-600 uppercase font-semibold">Average</div>
-            <div className="text-xl font-bold text-blue-800">
-              {stats.internal.avg.toFixed(1)}°C
-              <span className="text-sm font-normal text-blue-600 ml-1">
-                ({celsiusToFahrenheit(stats.internal.avg).toFixed(1)}°F)
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <ArrowUp className="h-4 w-4 text-red-500" />
+        <div className="grid grid-cols-3 gap-3">
+          <div className="flex items-center space-x-2 bg-blue-50 rounded p-2">
+            <div className="h-4 w-4 text-blue-600 flex-shrink-0">•</div>
             <div>
-              <div className="text-xs text-gray-500">Max</div>
-              <div className="font-semibold">
-                {stats.internal.max.toFixed(1)}°C / {celsiusToFahrenheit(stats.internal.max).toFixed(1)}°F
+              <div className="text-xs text-blue-600 uppercase font-semibold">Average</div>
+              <div className="font-bold text-blue-800">
+                {stats.internal.avg.toFixed(1)}°C
+                <span className="text-sm font-normal text-blue-600 block">
+                  {celsiusToFahrenheit(stats.internal.avg).toFixed(1)}°F
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <ArrowDown className="h-4 w-4 text-blue-500" />
+          <div className="flex items-center space-x-2 bg-blue-50 rounded p-2">
+            <ArrowUp className="h-4 w-4 text-red-500 flex-shrink-0" />
             <div>
-              <div className="text-xs text-gray-500">Min</div>
-              <div className="font-semibold">
-                {stats.internal.min.toFixed(1)}°C / {celsiusToFahrenheit(stats.internal.min).toFixed(1)}°F
+              <div className="text-xs text-blue-600 uppercase font-semibold">Max</div>
+              <div className="font-bold text-blue-800">
+                {stats.internal.max.toFixed(1)}°C
+                <span className="text-sm font-normal text-blue-600 block">
+                  {celsiusToFahrenheit(stats.internal.max).toFixed(1)}°F
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 bg-blue-50 rounded p-2">
+            <ArrowDown className="h-4 w-4 text-blue-500 flex-shrink-0" />
+            <div>
+              <div className="text-xs text-blue-600 uppercase font-semibold">Min</div>
+              <div className="font-bold text-blue-800">
+                {stats.internal.min.toFixed(1)}°C
+                <span className="text-sm font-normal text-blue-600 block">
+                  {celsiusToFahrenheit(stats.internal.min).toFixed(1)}°F
+                </span>
               </div>
             </div>
           </div>
@@ -145,43 +135,42 @@ export default function TemperatureStatistics({ data }: TemperatureStatisticsPro
           <Thermometer className="h-5 w-5 text-red-500" />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-red-50 rounded p-2">
-            <div className="text-xs text-red-600 uppercase font-semibold">Current</div>
-            <div className="text-xl font-bold text-red-800">
-              {stats.external.current.toFixed(1)}°C
-              <span className="text-sm font-normal text-red-600 ml-1">
-                ({celsiusToFahrenheit(stats.external.current).toFixed(1)}°F)
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-red-50 rounded p-2">
-            <div className="text-xs text-red-600 uppercase font-semibold">Average</div>
-            <div className="text-xl font-bold text-red-800">
-              {stats.external.avg.toFixed(1)}°C
-              <span className="text-sm font-normal text-red-600 ml-1">
-                ({celsiusToFahrenheit(stats.external.avg).toFixed(1)}°F)
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <ArrowUp className="h-4 w-4 text-red-500" />
+        <div className="grid grid-cols-3 gap-3">
+          <div className="flex items-center space-x-2 bg-red-50 rounded p-2">
+            <div className="h-4 w-4 text-red-600 flex-shrink-0">•</div>
             <div>
-              <div className="text-xs text-gray-500">Max</div>
-              <div className="font-semibold">
-                {stats.external.max.toFixed(1)}°C / {celsiusToFahrenheit(stats.external.max).toFixed(1)}°F
+              <div className="text-xs text-red-600 uppercase font-semibold">Average</div>
+              <div className="font-bold text-red-800">
+                {stats.external.avg.toFixed(1)}°C
+                <span className="text-sm font-normal text-red-600 block">
+                  {celsiusToFahrenheit(stats.external.avg).toFixed(1)}°F
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <ArrowDown className="h-4 w-4 text-blue-500" />
+          <div className="flex items-center space-x-2 bg-red-50 rounded p-2">
+            <ArrowUp className="h-4 w-4 text-red-500 flex-shrink-0" />
             <div>
-              <div className="text-xs text-gray-500">Min</div>
-              <div className="font-semibold">
-                {stats.external.min.toFixed(1)}°C / {celsiusToFahrenheit(stats.external.min).toFixed(1)}°F
+              <div className="text-xs text-red-600 uppercase font-semibold">Max</div>
+              <div className="font-bold text-red-800">
+                {stats.external.max.toFixed(1)}°C
+                <span className="text-sm font-normal text-red-600 block">
+                  {celsiusToFahrenheit(stats.external.max).toFixed(1)}°F
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 bg-red-50 rounded p-2">
+            <ArrowDown className="h-4 w-4 text-blue-500 flex-shrink-0" />
+            <div>
+              <div className="text-xs text-red-600 uppercase font-semibold">Min</div>
+              <div className="font-bold text-red-800">
+                {stats.external.min.toFixed(1)}°C
+                <span className="text-sm font-normal text-red-600 block">
+                  {celsiusToFahrenheit(stats.external.min).toFixed(1)}°F
+                </span>
               </div>
             </div>
           </div>

@@ -4,10 +4,11 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import TemperatureGraph from "../components/graphDisplay"
 import RawDataDisplay from "../components/rawDataDisplay"
 import StatsDisplay from "../components/statsDisplay"
+import { AlertCircle } from "lucide-react"
 
 // Updated interface to match the actual API response format
 interface TemperatureDataPoint {
@@ -17,15 +18,16 @@ interface TemperatureDataPoint {
   // Add any other fields that your API returns
 }
 
-// Function to fetch data from FastAPI with CORS handling
 const fetchTemperatureData = async (
   city: string,
   startDate: string,
   endDate: string,
+  heatingPower: number,
+  matToggle: boolean
 ): Promise<TemperatureDataPoint []> => {
   try {
     // Replace with your actual API URL
-    const apiUrl = `https://${API_BASE_URL}/simulate?city=${encodeURIComponent(city)}&start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`
+    const apiUrl = `https://${API_BASE_URL}/simulate?city=${encodeURIComponent(city)}&start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}&heating_power=${heatingPower}&mat_on=${matToggle}`
 
     console.log("Fetching data from:", apiUrl)
 
@@ -65,19 +67,40 @@ const fetchTemperatureData = async (
 }
 
 export default function TemperatureAnalysisDashboard() {
-  const [city, setCity] = useState("")
+  const [city, setCity] = useState("New York")
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
+  const [heatingPower, setHeatingPower] = useState(500) // Default to 500 watts
+  const [matOn, setMatOn] = useState(true) // Default to on
   const [temperatureData, setTemperatureData] = useState<TemperatureDataPoint[]>([])
+  const [visibleData, setVisibleData] = useState<TemperatureDataPoint[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [useMockData, setUseMockData] = useState(true) // Default to mock data for testing
+
+  // Set default dates if not set
+  useEffect(() => {
+    if (!startDate || !endDate) {
+      const today = new Date()
+      const oneWeekAgo = new Date(today)
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7) // Default to 7 days instead of 1
+
+      setStartDate(oneWeekAgo.toISOString().split("T")[0])
+      setEndDate(today.toISOString().split("T")[0])
+    }
+  }, [])
+
+  // When temperature data changes, update visible data
+  useEffect(() => {
+    setVisibleData(temperatureData)
+  }, [temperatureData])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
 
     // Validate inputs
-    if (!city) {
+    if (!city && !useMockData) {
       setError("Please enter a city")
       return
     }
@@ -92,14 +115,15 @@ export default function TemperatureAnalysisDashboard() {
       return
     }
 
+    // Validate date range
     const start = new Date(startDate)
     const end = new Date(endDate)
-    
+
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       setError("Please enter valid dates")
       return
     }
-    
+
     if (end < start) {
       setError("End date must be after start date")
       return
@@ -110,39 +134,50 @@ export default function TemperatureAnalysisDashboard() {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
     // Optional: Add a warning for large date ranges
-    if (diffDays > 30) {
-      if (!confirm(`You've selected a ${diffDays} day range. This might be slow to load. Continue?`)) {
-        return
-      }
+    if (diffDays > 30 && !confirm(`You've selected a ${diffDays} day range. This might be slow to load. Continue?`)) {
+      return
     }
 
     setIsLoading(true)
 
     try {
-      const data = await fetchTemperatureData(city, startDate, endDate);
-      console.log("Data received from API:", data)
-      setTemperatureData(data)
+      let data: TemperatureDataPoint[]
+      data = await fetchTemperatureData(city, startDate, endDate, heatingPower, matOn)
+
+      console.log("Data received:", data)
+      console.log(`Received ${data.length} data points spanning ${diffDays} days`)
+
+      if (data.length === 0) {
+        setError("No data returned for the selected date range")
+      } else {
+        setTemperatureData(data)
+        setVisibleData(data) // Initialize visible data with all data
+      }
     } catch (error) {
       console.error("Error fetching temperature data:", error)
       setError(`Failed to fetch temperature data: ${error instanceof Error ? error.message : "Unknown error"}`)
       setTemperatureData([])
+      setVisibleData([])
     } finally {
       setIsLoading(false)
     }
   }
 
-
-  // Set default dates if not set
-  const setDefaultDates = () => {
-    if (!startDate) {
-      const today = new Date()
-      const oneWeekAgo = new Date(today)
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7) // Default to 7 days instead of 1
-
-      setStartDate(oneWeekAgo.toISOString().split("T")[0])
-      setEndDate(today.toISOString().split("T")[0])
-    }
+  // Handle visible data change from graph component
+  const handleVisibleDataChange = (data: TemperatureDataPoint[]) => {
+    setVisibleData(data)
   }
+
+  // Load initial data on mount
+  useEffect(() => {
+    if (startDate && endDate) {
+      // Use setTimeout to ensure this runs after initial render
+      const timer = setTimeout(() => {
+        handleSubmit(new Event("submit") as any)
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [startDate, endDate])
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -163,7 +198,8 @@ export default function TemperatureAnalysisDashboard() {
                 placeholder="Enter city name (e.g., New York, Tokyo)"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                disabled={useMockData}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
               />
             </div>
 
@@ -176,7 +212,6 @@ export default function TemperatureAnalysisDashboard() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                onFocus={setDefaultDates}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -190,9 +225,40 @@ export default function TemperatureAnalysisDashboard() {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                onFocus={setDefaultDates}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="heatingPower" className="block text-sm font-medium text-gray-700">
+                Heating Power (Watts)
+              </label>
+              <input
+                id="heatingPower"
+                type="number"
+                min="0"
+                step="50"
+                value={heatingPower}
+                onChange={(e) => setHeatingPower(Number.parseInt(e.target.value) || 0)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter power in watts"
+              />
+              <div className="text-xs text-gray-500">If no heating, set to 0</div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center">
+                <input
+                  id="matOn"
+                  type="checkbox"
+                  checked={matOn}
+                  onChange={(e) => setMatOn(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="matOn" className="ml-2 block text-sm text-gray-700">
+                  Mat Cover
+                </label>
+              </div>
             </div>
 
             <div className="flex flex-col space-y-2">
@@ -240,7 +306,12 @@ export default function TemperatureAnalysisDashboard() {
               </div>
             </div>
 
-            {error && <div className="text-red-500 text-sm p-2 bg-red-50 border border-red-200 rounded">{error}</div>}
+            {error && (
+              <div className="text-red-500 text-sm p-3 bg-red-50 border border-red-200 rounded flex items-start">
+                <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
 
             <button
               type="submit"
@@ -255,13 +326,13 @@ export default function TemperatureAnalysisDashboard() {
 
       {/* RIGHT COLUMN - GRAPH AND RAW DATA */}
       <div className="lg:col-span-2 space-y-4">
-          {/* STATISTICS SECTION */}
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+        {/* STATISTICS SECTION */}
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
           <div className="p-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold">STATISTICS</h2>
           </div>
           <div className="p-4">
-            <StatsDisplay data={temperatureData} />
+            <StatsDisplay data={visibleData} />
           </div>
         </div>
 
@@ -271,7 +342,7 @@ export default function TemperatureAnalysisDashboard() {
             <h2 className="text-lg font-semibold">GRAPH</h2>
           </div>
           <div className="p-4">
-            <TemperatureGraph data={temperatureData} />
+            <TemperatureGraph data={temperatureData} onVisibleDataChange={handleVisibleDataChange} />
           </div>
         </div>
 
