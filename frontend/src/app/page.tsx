@@ -77,18 +77,6 @@ export default function TemperatureAnalysisDashboard() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Set default dates if not set
-  useEffect(() => {
-    if (!startDate || !endDate) {
-      const today = new Date()
-      const oneWeekAgo = new Date(today)
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7) // Default to 7 days instead of 1
-
-      setStartDate(oneWeekAgo.toISOString().split("T")[0])
-      setEndDate(today.toISOString().split("T")[0])
-    }
-  }, [])
-
   // When temperature data changes, update visible data
   useEffect(() => {
     setVisibleData(temperatureData)
@@ -166,17 +154,6 @@ export default function TemperatureAnalysisDashboard() {
   const handleVisibleDataChange = (data: TemperatureDataPoint[]) => {
     setVisibleData(data)
   }
-
-  // Load initial data on mount
-  useEffect(() => {
-    if (startDate && endDate) {
-      // Use setTimeout to ensure this runs after initial render
-      const timer = setTimeout(() => {
-        handleSubmit(new Event("submit") as any)
-      }, 100)
-      return () => clearTimeout(timer)
-    }
-  }, [startDate, endDate])
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
