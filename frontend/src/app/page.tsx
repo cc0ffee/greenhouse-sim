@@ -76,7 +76,6 @@ export default function TemperatureAnalysisDashboard() {
   const [visibleData, setVisibleData] = useState<TemperatureDataPoint[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [useMockData, setUseMockData] = useState(true) // Default to mock data for testing
 
   // Set default dates if not set
   useEffect(() => {
@@ -100,7 +99,7 @@ export default function TemperatureAnalysisDashboard() {
     setError(null)
 
     // Validate inputs
-    if (!city && !useMockData) {
+    if (!city) {
       setError("Please enter a city")
       return
     }
@@ -198,8 +197,7 @@ export default function TemperatureAnalysisDashboard() {
                 placeholder="Enter city name (e.g., New York, Tokyo)"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                disabled={useMockData}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
@@ -237,13 +235,14 @@ export default function TemperatureAnalysisDashboard() {
                 id="heatingPower"
                 type="number"
                 min="0"
+                max="2000"
                 step="50"
                 value={heatingPower}
                 onChange={(e) => setHeatingPower(Number.parseInt(e.target.value) || 0)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Enter power in watts"
               />
-              <div className="text-xs text-gray-500">If no heating, set to 0</div>
+              <div className="text-xs text-gray-500">Enter a value between 0 and 2000 watts</div>
             </div>
 
             <div className="space-y-2">
@@ -256,7 +255,7 @@ export default function TemperatureAnalysisDashboard() {
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label htmlFor="matOn" className="ml-2 block text-sm text-gray-700">
-                  Mat Cover
+                  Heating Mat On
                 </label>
               </div>
             </div>
@@ -359,4 +358,3 @@ export default function TemperatureAnalysisDashboard() {
     </div>
   )
 }
-
