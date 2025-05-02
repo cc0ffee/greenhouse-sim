@@ -203,7 +203,7 @@ export default function TemperatureAnalysisDashboard() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-
+            /*
             <div className="space-y-2">
               <label htmlFor="heatingPower" className="block text-sm font-medium text-gray-700">
                 Heating Power (Watts)
@@ -221,7 +221,7 @@ export default function TemperatureAnalysisDashboard() {
               />
               <div className="text-xs text-gray-500">If no heating, set to 0</div>
             </div>
-
+      
             <div className="space-y-2">
               <div className="flex items-center">
                 <input
@@ -237,7 +237,7 @@ export default function TemperatureAnalysisDashboard() {
                 </label>
               </div>
             </div>
-
+            */
             <div className="flex flex-col space-y-2">
               <span className="text-sm text-gray-500">Date Range Presets:</span>
               <div className="flex flex-wrap gap-2">
