@@ -40,7 +40,7 @@ def calculate_hourly_temperatures(weather_data, heating_power, mat_toggle):
             U_value_toggle = U_NIGHT if mat_toggle else U_DAY # U_DAY represents without the mat
             T_internal = nighttime_temp(T_internal, Q_thermal, U_value_toggle, AREA, T_external, THERMAL_MASS)
 
-        temperatures.append((timestamp, round(T_internal,1), T_external, is_daytime))
+        temperatures.append((timestamp, T_internal, T_external, is_daytime))
 
     return pd.DataFrame(temperatures,
                         columns=['Timestamp', 'Internal Temperature (°C)', 'External Temperature (°C)', 'Is Daytime'])
