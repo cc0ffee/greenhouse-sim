@@ -209,7 +209,7 @@ export default function TemperatureAnalysisDashboard() {
                 Heating Power (Watts)
               </label>
               <input
-                disabled={true}
+                disabled={false}
                 id="heatingPower"
                 type="number"
                 min="0"
@@ -226,14 +226,14 @@ export default function TemperatureAnalysisDashboard() {
               <div className="flex items-center">
                 <input
                   id="matOn"
-                  disabled={true}
+                  disabled={false}
                   type="checkbox"
                   checked={matOn}
                   onChange={(e) => setMatOn(e.target.checked)}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label htmlFor="matOn" className="ml-2 block text-sm text-gray-700">
-                  Heating Mat On
+                  Rolling Mat
                 </label>
               </div>
             </div>
