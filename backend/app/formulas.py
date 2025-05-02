@@ -24,4 +24,4 @@ def nighttime_temp(T_internal_prev, Q_thermal, U_value, area, T_external, therma
 def thermal_mass_calculation(V_volume_layer, P_density, C_heat_capacity):
     return V_volume_layer * P_density * C_heat_capacity
 
-# https://www.solarenergylocal.com/states/illinois/chicago/ to calculate solar gain
+# https://www.solarenergylocal.com/states/illinois/chicago/ to calculate solar gain i think
