@@ -11,8 +11,8 @@ from app.utils.fetch_weather import fetch_weather
 SOLAR_GAIN = SOLAR_RADIATION * GREENHOUSE_AREA * TRANSMISSION_EFFICIENCY  # W
 # HEATING_POWER = 0 #200  # W
 THERMAL_MASS = 193370  # J/K
-U_DAY = 5.6  # W/m^2-K
-U_NIGHT = 0.01486  # W/m^2-K
+U_DAY = 3.0  # W/m^2-K
+U_NIGHT = 1.19  # W/m^2-K
 AREA = GREENHOUSE_AREA  # m^2 (assuming area for heat loss calculation)
 
 
