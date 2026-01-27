@@ -4,34 +4,37 @@ based on weather data (real-time, forecast, historical).
 
 ### Overview
 
-#### Goals
+This repository features the following:
+- worker that runs the simulation
+- cli runner to run locally
+- backend from Spring 2025 that runs simulation and gives it to frontend
+- frontend dashboard
 
-We were given a report from the previous group with formulas of how to calculate the internal temperatures of a solar greenhouse. What we want to do now is apply it to real-time data and automate the process. The main goals are:
+As of now, the more accurate simulation is provided within the worker directory. This along with the CLI runner will return the results via `matplotlib`.
 
-- Use the report's information against real-time data
-- Optimize formulas to provide variable values
-- Get to run simulations for other groups
 
-#### Parameters and Formulas
-- Solar Gain
-- Heating Power
-- U_Value (Daytime)
-- U_Value (Nighttime)
-- External Daytime Temp
-- Internal Nighttime Temp
+### How to run?
 
-### Run/Build
-1. Install pip package dependencies: `pip install -r ./requirements.txt`
-2. Run `test_simulation.py`
+There are two ways: running it through Python itself or Docker.
 
-### To-Do
-- [ ] Fix/Tweak formulas
-- [ ] Be able to change materials / other params
-- [ ] Make tests against previous group's results
-- [x] Get temperature from library / data
-- [x] Graphs/Visuals, possibly from matplotlib
-- [ ] 10 degrees sunrise/sunset
-- [ ] easy-to-use CLI / Website for others to test on
-- [ ] organize and document code
+#### Python
 
-### Acknowledgements
+1. Enter the directory `worker`
+2. `pip install -r requirements.txt`
+3. `python3 cli_runner.py`
+
+#### Docker
+
+1. The Dockerfile is within `worker` directory.
+
+Both are ran off the `configs/default.json` file with the parameters there, feel free to change there to get different results!
+
+### Future Goals
+
+Since working on it, we weren't able to provide the worker simulation to the frontend due to time constraints and some errors. Ideally we want a dashboard for others to use rather than just a python file.
+
+- [] Improve any inaccuracies in the simulation
+
+- [] Provide frontend dashboard from the worker instead of the original backend implementation
+
+- [] Be able to let users give parameters to it whilst saving results (Redis)
